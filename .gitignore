@@ -1,0 +1,31 @@
+# STM32CubeIDE specific
+.metadata/
+[Dd]ebug/
+[Rr]elease/
+.launch
+
+# Build files
+*.o
+*.d
+*.axf
+*.bin
+*.hex
+*.map
+*.lst
+*.elf
+
+# IDE & CubeMX specific
+*.launch
+*.pydevproject
+*.swp
+.idea/
+*.ioc.md5
+*.ioc.csv
+.vscode/
+
+# OS & Other generated files
+*.log
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db

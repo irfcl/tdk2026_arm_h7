@@ -1,0 +1,368 @@
+/*
+ * uros_init.cpp
+ *
+ * Created on: Apr 9, 2025
+ * Author: stanly
+ */
+
+#include "uros_init.h"
+#include <math.h>
+#include <string.h>
+#include "arm.h"
+#include "mission.hpp"
+#include "mission_ctrl.h"
+
+#include <std_msgs/msg/bool.h>
+#include <std_msgs/msg/int32.h>
+
+#include <std_msgs/msg/int16_multi_array.h>
+
+rcl_publisher_t           arm_pub;
+std_msgs__msg__Int32      arm_msg;
+rcl_publisher_t           mission_pub;
+std_msgs__msg__Int32      mission_msg;
+rcl_subscription_t        cmd_arm_sub;
+std_msgs__msg__Int32      cmd_arm_msg;
+rcl_timer_t               pub_timer;
+
+//rcl_subscription_t        cmd_intake_sub;
+//std_msgs__msg__Bool       cmd_intake_msg;
+//rcl_subscription_t        cmd_claw_sub;
+//std_msgs__msg__Bool       cmd_claw_msg;
+
+rcl_subscription_t        test_arm_sub;
+std_msgs__msg__Int16MultiArray test_arm_msg;
+
+rclc_support_t support;
+rcl_allocator_t allocator;
+rcl_node_t node;
+rcl_init_options_t init_options;
+rclc_executor_t executor;
+
+agent_status_t status = AGENT_WAITING;
+
+int ping_fail_count = 0;
+#define MAX_PING_FAIL_COUNT 5
+
+extern UART_HandleTypeDef USARTx;
+
+void uros_init(void) {
+  // Initialize micro-ROS
+  rmw_uros_set_custom_transport(
+    true,
+    (void *) &USARTx,
+    cubemx_transport_open,
+    cubemx_transport_close,
+    cubemx_transport_write,
+    cubemx_transport_read);
+  
+  rcl_allocator_t freeRTOS_allocator = rcutils_get_zero_initialized_allocator();
+
+  freeRTOS_allocator.allocate = microros_allocate;
+  freeRTOS_allocator.deallocate = microros_deallocate;
+  freeRTOS_allocator.reallocate = microros_reallocate;
+  freeRTOS_allocator.zero_allocate =  microros_zero_allocate;
+
+  if (!rcutils_set_default_allocator(&freeRTOS_allocator)) {
+    printf("Error on default allocators (line %d)\n", __LINE__);
+  }
+}
+
+void uros_agent_status_check(void) {
+  switch (status) {
+    case AGENT_WAITING:
+      handle_state_agent_waiting();
+      break;
+    case AGENT_AVAILABLE:
+      handle_state_agent_available();
+      break;
+    case AGENT_CONNECTED:
+      handle_state_agent_connected();
+      break;
+    case AGENT_TRYING:
+      handle_state_agent_trying();
+      break;
+    case AGENT_DISCONNECTED:
+      handle_state_agent_disconnected();
+      break;
+    default:
+      break;
+  }
+}
+
+void handle_state_agent_waiting(void) {
+  __HAL_UART_CLEAR_OREFLAG(&USARTx);
+  status = (rmw_uros_ping_agent(100, 10) == RMW_RET_OK) ? AGENT_AVAILABLE : AGENT_WAITING;
+}
+
+void handle_state_agent_available(void) {
+  __HAL_UART_CLEAR_OREFLAG(&USARTx);
+  uros_destroy_entities();
+  uros_create_entities();
+
+  if(status != AGENT_WAITING) {
+      status = AGENT_CONNECTED;
+  }
+}
+
+void handle_state_agent_connected(void) {
+  if(rmw_uros_ping_agent(150, 3) == RMW_RET_OK){
+    rclc_executor_spin_some(&executor, RCL_MS_TO_NS(50));
+    ping_fail_count = 0; // Reset ping fail count
+  } else {
+    ping_fail_count++;
+    if(ping_fail_count >= MAX_PING_FAIL_COUNT){
+      status = AGENT_TRYING;
+    }
+  }
+}
+
+void handle_state_agent_trying(void) {
+  if(rmw_uros_ping_agent(150, 3) == RMW_RET_OK){
+    status = AGENT_CONNECTED;
+    ping_fail_count = 0; // Reset ping fail count
+  } else {
+    ping_fail_count++;
+    if(ping_fail_count >= MAX_PING_FAIL_COUNT){
+      status = AGENT_DISCONNECTED;
+      ping_fail_count = 0;
+    }
+  }
+}
+
+void handle_state_agent_disconnected(void) {
+  uros_destroy_entities();
+  status = AGENT_WAITING;
+}
+
+
+void uros_create_entities(void) {
+  rcl_ret_t rc;
+
+  __HAL_UART_CLEAR_OREFLAG(&USARTx);
+  volatile uint32_t tmpreg = 0;
+  while (__HAL_UART_GET_FLAG(&USARTx, UART_FLAG_RXNE)) {
+      tmpreg = USARTx.Instance->RDR;
+  }
+
+  allocator = rcl_get_default_allocator();
+
+  //0724
+  test_arm_msg.data.data =
+      (int16_t *)malloc(sizeof(int16_t) * 12);
+
+  test_arm_msg.data.size = 12;
+  test_arm_msg.data.capacity = 12;
+  //
+
+  init_options = rcl_get_zero_initialized_init_options();
+  rcl_init_options_init(&init_options, allocator);
+  rcl_init_options_set_domain_id(&init_options, DOMAIN_ID);
+
+  rc = rclc_support_init_with_options(&support, 0, NULL, &init_options, &allocator);
+  if(rc != RCL_RET_OK){
+      status = AGENT_WAITING;
+      rcl_init_options_fini(&init_options);
+      return;
+  }
+
+  rcl_init_options_fini(&init_options);
+  
+  rc = rclc_node_init_default(&node, NODE_NAME, "", &support);
+  if(rc != RCL_RET_OK){ status = AGENT_WAITING; return; }
+
+  // Initialize publisher for arm_status
+  rc = rclc_publisher_init_default(
+    &arm_pub,
+    &node,
+    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32),
+    "robot/arm_status");
+  if(rc != RCL_RET_OK){ status = AGENT_WAITING; return; }
+  arm_msg.data = -1;
+
+  rmw_uros_set_publisher_session_timeout(rcl_publisher_get_rmw_handle(&arm_pub), 10);
+
+  // Initialize publisher for mission_starter
+  rc = rclc_publisher_init_default(
+    &mission_pub,
+    &node,
+    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32),
+    "mission_starter");
+  if(rc != RCL_RET_OK){ status = AGENT_WAITING; return; }
+  mission_msg.data = 0;
+
+  rmw_uros_set_publisher_session_timeout(rcl_publisher_get_rmw_handle(&mission_pub), 10);
+
+  // Initialize subscriber for arm command
+  rc = rclc_subscription_init_default(
+    &cmd_arm_sub,
+    &node,
+    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32),
+    "robot/cmd_arm");
+  if(rc != RCL_RET_OK){ status = AGENT_WAITING; return; }
+  cmd_arm_msg.data = -1;
+
+//  //0704新增
+//  rc = rclc_subscription_init_default(
+//	&cmd_intake_sub,
+//	&node,
+//	ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Bool),
+//	"robot/cmd_intake");
+//    if(rc != RCL_RET_OK){ status = AGENT_WAITING; return; }
+//    cmd_intake_msg.data = false;
+//
+//    rc = rclc_subscription_init_default(
+//    &cmd_claw_sub,
+//	&node,
+//	ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Bool),
+//	"robot/cmd_claw");
+//    if(rc != RCL_RET_OK){ status = AGENT_WAITING; return; }
+//    cmd_claw_msg.data = false;
+//  //
+
+  //0724
+    rc = rclc_subscription_init_default(
+        &test_arm_sub,
+        &node,
+        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int16MultiArray),
+        "robot/test_arm");
+
+    if(rc != RCL_RET_OK){
+        status = AGENT_WAITING;
+        return;
+    }
+    //
+
+  // Initialize timer for publishing
+  rc = rclc_timer_init_default(
+    &pub_timer,
+    &support,
+    RCL_MS_TO_NS(100),
+    pub_timer_cb);
+  if(rc != RCL_RET_OK){ status = AGENT_WAITING; return; }
+
+  // Create executor (1 timer + 1 subscription)
+  rc = rclc_executor_init(&executor, &support.context, 5, &allocator);
+  if(rc != RCL_RET_OK){ status = AGENT_WAITING; return; }
+
+  rclc_executor_add_subscription(&executor, &cmd_arm_sub, &cmd_arm_msg, &cmd_arm_sub_cb, ON_NEW_DATA);
+//  rclc_executor_add_subscription(&executor, &cmd_intake_sub, &cmd_intake_msg, &cmd_intake_sub_cb, ON_NEW_DATA);
+//  rclc_executor_add_subscription(&executor, &cmd_claw_sub, &cmd_claw_msg, &cmd_claw_sub_cb, ON_NEW_DATA);
+  rclc_executor_add_timer(&executor, &pub_timer);
+  rclc_executor_add_subscription(&executor, &test_arm_sub, &test_arm_msg, &cmd_test_arm_sub_cb, ON_NEW_DATA);
+}
+
+void uros_destroy_entities(void) {
+  rmw_context_t* rmw_context = rcl_context_get_rmw_context(&support.context);
+  (void) rmw_uros_set_context_entity_destroy_session_timeout(rmw_context, 0);
+
+  // Destroy publisher
+  rcl_publisher_fini(&arm_pub, &node);
+  rcl_publisher_fini(&mission_pub, &node);
+
+  // Destroy subscription
+  rcl_subscription_fini(&cmd_arm_sub, &node);
+
+  rcl_subscription_fini(&test_arm_sub, &node);
+  free(test_arm_msg.data.data);
+
+  // Destroy timer
+  rcl_timer_fini(&pub_timer);
+
+  // Destroy executor
+  rclc_executor_fini(&executor);
+
+  // Destroy node
+  rcl_node_fini(&node);
+  rclc_support_fini(&support);
+}
+
+//0724
+//void cmd_arm_sub_cb(const void* msgin) {
+//  const std_msgs__msg__Int32 * msg = (const std_msgs__msg__Int32 *)msgin;
+//  cmd_arm_msg = *msg;
+//  mission_type = cmd_arm_msg.data;
+//  mission_ctrl();
+//}
+void cmd_arm_sub_cb(const void* msgin)
+{
+    const std_msgs__msg__Int32 *msg =
+        (const std_msgs__msg__Int32 *)msgin;
+
+    arm_mode = ARM_MISSION;
+
+    mission_type = msg->data;
+
+//    mission_ctrl();
+}
+//
+
+//void cmd_intake_sub_cb(const void* msgin) {
+//  const std_msgs__msg__Bool * msg = (const std_msgs__msg__Bool *)msgin;
+//  cmd_intake_msg = *msg;
+//
+//  //TODO
+//}
+//
+//void cmd_claw_sub_cb(const void* msgin) {
+//  const std_msgs__msg__Bool * msg = (const std_msgs__msg__Bool *)msgin;
+//  cmd_claw_msg = *msg;
+//
+//  //TODO
+//}
+
+void cmd_test_arm_sub_cb(const void *msgin)
+{
+    const std_msgs__msg__Int16MultiArray *msg =
+        (const std_msgs__msg__Int16MultiArray *)msgin;
+
+    if(msg->data.size < 2)
+        return;
+
+    if (msg->data.size >= 12) {
+        lower_test           = msg->data.data[0];
+        upper_test           = msg->data.data[1];
+        intake_test          = msg->data.data[2];
+        fork_test            = msg->data.data[3];
+        sieve_test           = msg->data.data[4];
+        roller_pwm           = msg->data.data[5];
+        servo1_gobilda_pulse = msg->data.data[6];
+        servo2_wrist_deg     = msg->data.data[7];
+        servo3_claw_deg      = msg->data.data[8];
+        servo4_slewing_deg   = msg->data.data[9];
+        servo5_outside_deg   = msg->data.data[10];
+        servo6_inside_deg    = msg->data.data[11];
+    }
+
+    else if (msg->data.size == 2) {
+        int index = msg->data.data[0];
+        int value = msg->data.data[1];
+
+        switch(index) {
+            case 0:  lower_test           = value; break;
+            case 1:  upper_test           = value; break;
+            case 2:  intake_test          = value; break;
+            case 3:  fork_test            = value; break;
+            case 4:  sieve_test           = value; break;
+            case 5:  roller_pwm           = value; break;
+            case 6:  servo1_gobilda_pulse = value; break;
+            case 7:  servo2_wrist_deg     = value; break;
+            case 8:  servo3_claw_deg      = value; break;
+            case 9:  servo4_slewing_deg   = value; break;
+            case 10: servo5_outside_deg   = value; break;
+            case 11: servo6_inside_deg    = value; break;
+            default: break;
+        }
+    }
+}
+
+void pub_timer_cb(rcl_timer_t * timer, int64_t last_call_time){
+  arm_msg.data = mission_status;
+  rcl_publish(&arm_pub, &arm_msg, NULL);
+  if(x1_reset){
+      mission_msg.data = -1;
+  }else{
+      mission_msg.data = mis_set;
+  }
+  rcl_publish(&mission_pub, &mission_msg, NULL);
+}

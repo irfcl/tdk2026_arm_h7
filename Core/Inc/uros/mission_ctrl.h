@@ -1,0 +1,32 @@
+
+#ifndef SRC_MAIN_PROGRAM_MISSION_CTRL_H_
+#define SRC_MAIN_PROGRAM_MISSION_CTRL_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
+#include "stm32h7xx_hal.h"
+#include "stm32h7xx.h"
+#include "stm32h7xx_it.h"
+#include "stm32h723xx.h"
+#include <stdbool.h>
+
+// 函數宣告
+void read_btn_sta();
+void mission_set();
+void send_mission();
+void reset_x1();
+
+// 外部變數宣告
+extern bool mis_1, mis_2, mis_3, mis_4, mis_LR;
+extern int mis_num, mis_dir, mis_set, x1_reset;
+extern bool mis_set_flag;
+
+#ifdef __cplusplus
+}
+#endif
+
+
+
+#endif /* SRC_MAIN_PROGRAM_MISSION_CTRL_H_ */
