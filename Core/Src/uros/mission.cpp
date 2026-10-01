@@ -317,6 +317,8 @@ void mission_200(void *pvParameters)
 	sieve_test = -95;
 	osDelay(100);
 	servo7_cascade_rotate = 90;
+	servo5_outside_deg = 30;
+	servo6_inside_deg = 150;
 	osDelay(1000);
 	for (int i =0; i <20; i++) {
 		servo8_cascade_lengthen += 9;

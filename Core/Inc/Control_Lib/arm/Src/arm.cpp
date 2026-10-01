@@ -148,7 +148,7 @@ void arm_timer_callback(void) {							// constantly run the servo in timer callb
 	}
 
 	if(sieve_homing){
-	    sieve_joint.setPWM(-250);
+	    sieve_joint.setPWM(600);
 	}
 	else{
 	    sieve_joint.setTarget(sieve_test);
