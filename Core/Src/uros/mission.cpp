@@ -19,6 +19,7 @@ extern volatile bool lower_homing;
 extern volatile bool upper_homing;
 extern volatile bool intake_homing;
 extern volatile bool fork_homing;
+extern volatile bool sieve_homing;
 
 extern JointMotor_polulu lower_joint;
 extern JointMotor_polulu upper_joint;
@@ -203,6 +204,24 @@ void mission_ctrl(void)
     	    task_created = -1;
     	}
     	break;
+
+    case 91:
+    	arm_mode = ARM_MISSION;
+    	ret = xTaskCreate(mission_91, "mission_91", 512, NULL, 2, NULL);
+    	if(ret != pdPASS)
+    	{
+    	    task_created = -1;
+    	}
+    	break;
+
+    case 92:
+    	arm_mode = ARM_MISSION;
+    	ret = xTaskCreate(mission_92, "mission_92", 512, NULL, 2, NULL);
+    	if(ret != pdPASS)
+    	{
+    	    task_created = -1;
+    	}
+    	break;
     }
 }
 
@@ -263,6 +282,26 @@ void mission_99(void *pvParameters)
     mission_status = mission_type;
     arm_homing();
     while(lower_homing || upper_homing){
+        osDelay(20);
+    }
+    finishMission();
+}
+
+void mission_91(void *pvParameters)
+{
+    mission_status = mission_type;
+    sieve_mission_homing();
+    while(sieve_homing){
+        osDelay(20);
+    }
+    finishMission();
+}
+
+void mission_92(void *pvParameters)
+{
+    mission_status = mission_type;
+    fork_mission_homing();
+    while(fork_homing){
         osDelay(20);
     }
     finishMission();

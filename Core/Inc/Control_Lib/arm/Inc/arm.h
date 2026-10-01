@@ -28,6 +28,9 @@ void arm_timer_callback(void);              // arm timer callback
 void arm_cascade_set_to_zero(void* pvParameters);         // set arm to zero position
 void arm_homing(void);
 void servo_moving(float *now,float target,float speed);
+void sieve_mission_homing(void);
+void fork_mission_homing(void);
+
 
 extern volatile int lower_pwm;
 extern volatile int upper_pwm;

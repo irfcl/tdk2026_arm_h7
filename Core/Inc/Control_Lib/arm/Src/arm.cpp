@@ -48,7 +48,7 @@ volatile float sieve_test = 0;
 volatile int servo1_gobilda_pulse = 1000;
 volatile int servo2_wrist_deg = 55;
 volatile int servo3_claw_deg = 80;
-volatile int servo4_slewing_deg = 790;
+volatile int servo4_slewing_deg = 730;
 volatile int servo5_outside_deg = 30;
 volatile int servo6_inside_deg = 150;
 volatile int servo7_cascade_rotate = 0;
@@ -163,7 +163,7 @@ void arm_timer_callback(void) {							// constantly run the servo in timer callb
     __HAL_TIM_SET_COMPARE(&htim15, TIM_CHANNEL_1, 500 + ((int32_t)servo5_outside_deg * 2000 / 180));
     __HAL_TIM_SET_COMPARE(&htim15, TIM_CHANNEL_2, 500 + ((int32_t)servo6_inside_deg * 2000 / 180));
 
-    __HAL_TIM_SET_COMPARE(&htim12, TIM_CHANNEL_1, 500 + ((int32_t)servo7_cascade_rotate * 2000 / 180));
+    __HAL_TIM_SET_COMPARE(&htim12, TIM_CHANNEL_1, servo7_cascade_rotate);
     __HAL_TIM_SET_COMPARE(&htim12, TIM_CHANNEL_2, 500 + ((int32_t)servo8_cascade_lengthen * 2000 / 180));
 
     if(roller_pwm>0){
@@ -197,14 +197,14 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
         upper_homing = false;
     }
 
-    else if(GPIO_Pin == GPIO_PIN_3){
+    else if(GPIO_Pin == GPIO_PIN_3 && fork_homing){
         fork_joint.stop();
         fork_joint.zero();
         fork_test = 0;
         fork_homing = false;
     }
 
-    else if(GPIO_Pin == GPIO_PIN_2){
+    else if(GPIO_Pin == GPIO_PIN_2 && sieve_homing){
         sieve_joint.stop();
         sieve_joint.zero();
         sieve_test = 0;
@@ -224,7 +224,14 @@ void arm_homing(void)
 {
     lower_homing = true;
     upper_homing = true;
-//    intake_homing = true;
-//    fork_homing = true;
-//    sieve_homing = true;
+}
+
+void sieve_mission_homing(void)
+{
+    sieve_homing = true;
+}
+
+void fork_mission_homing(void)
+{
+    fork_homing = true;
 }

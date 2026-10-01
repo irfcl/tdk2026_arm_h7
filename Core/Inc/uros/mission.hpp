@@ -42,6 +42,9 @@ void mission_308(void *pvParameters);
 void mission_309(void *pvParameters);
 void mission_310(void *pvParameters);
 void mission_99(void *pvParameters);
+void mission_91(void *pvParameters);
+void mission_92(void *pvParameters);
+
 
 
 #ifdef __cplusplus
