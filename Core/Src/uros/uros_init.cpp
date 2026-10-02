@@ -149,10 +149,10 @@ void uros_create_entities(void) {
 
   //0724
   test_arm_msg.data.data =
-      (int16_t *)malloc(sizeof(int16_t) * 12);
+      (int16_t *)malloc(sizeof(int16_t) * 14);
 
-  test_arm_msg.data.size = 12;
-  test_arm_msg.data.capacity = 12;
+  test_arm_msg.data.size = 14;
+  test_arm_msg.data.capacity = 14;
   //
 
   init_options = rcl_get_zero_initialized_init_options();
@@ -319,19 +319,21 @@ void cmd_test_arm_sub_cb(const void *msgin)
     if(msg->data.size < 2)
         return;
 
-    if (msg->data.size >= 12) {
-        lower_test           = msg->data.data[0];
-        upper_test           = msg->data.data[1];
-        intake_test          = msg->data.data[2];
-        fork_test            = msg->data.data[3];
-        sieve_test           = msg->data.data[4];
-        roller_pwm           = msg->data.data[5];
-        servo1_gobilda_pulse = msg->data.data[6];
-        servo2_wrist_deg     = msg->data.data[7];
-        servo3_claw_deg      = msg->data.data[8];
-        servo4_slewing_deg   = msg->data.data[9];
-        servo5_outside_deg   = msg->data.data[10];
-        servo6_inside_deg    = msg->data.data[11];
+    if (msg->data.size >= 14) {
+        lower_test           		= msg->data.data[0];
+        upper_test           		= msg->data.data[1];
+        intake_test          		= msg->data.data[2];
+        fork_test            		= msg->data.data[3];
+        sieve_test           		= msg->data.data[4];
+        roller_pwm           		= msg->data.data[5];
+        servo1_gobilda_pulse 		= msg->data.data[6];
+        servo2_wrist_deg     		= msg->data.data[7];
+        servo3_claw_deg      		= msg->data.data[8];
+        servo4_slewing_deg   		= msg->data.data[9];
+        servo5_outside_deg   		= msg->data.data[10];
+        servo6_inside_deg    		= msg->data.data[11];
+        servo7_cascade_rotate		= msg->data.data[12];
+		servo8_cascade_lengthen		= msg->data.data[13];
     }
 
     else if (msg->data.size == 2) {
@@ -339,18 +341,21 @@ void cmd_test_arm_sub_cb(const void *msgin)
         int value = msg->data.data[1];
 
         switch(index) {
-            case 0:  lower_test           = value; break;
-            case 1:  upper_test           = value; break;
-            case 2:  intake_test          = value; break;
-            case 3:  fork_test            = value; break;
-            case 4:  sieve_test           = value; break;
-            case 5:  roller_pwm           = value; break;
-            case 6:  servo1_gobilda_pulse = value; break;
-            case 7:  servo2_wrist_deg     = value; break;
-            case 8:  servo3_claw_deg      = value; break;
-            case 9:  servo4_slewing_deg   = value; break;
-            case 10: servo5_outside_deg   = value; break;
-            case 11: servo6_inside_deg    = value; break;
+            case 0:  lower_test           	  = value; break;
+            case 1:  upper_test           	  = value; break;
+            case 2:  intake_test          	  = value; break;
+            case 3:  fork_test            	  = value; break;
+            case 4:  sieve_test           	  = value; break;
+            case 5:  roller_pwm           	  = value; break;
+            case 6:  servo1_gobilda_pulse     = value; break;
+            case 7:  servo2_wrist_deg     	  = value; break;
+            case 8:  servo3_claw_deg      	  = value; break;
+            case 9:  servo4_slewing_deg       = value; break;
+            case 10: servo5_outside_deg   	  = value; break;
+            case 11: servo6_inside_deg   	  = value; break;
+            case 12: servo7_cascade_rotate	  = value; break;
+            case 13: servo8_cascade_lengthen  = value; break;
+
             default: break;
         }
     }
