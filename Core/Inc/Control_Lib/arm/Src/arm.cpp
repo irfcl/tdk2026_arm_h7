@@ -46,13 +46,13 @@ volatile float fork_test = 0;
 volatile float sieve_test = 0;
 
 volatile int servo1_gobilda_pulse = 1000;
-volatile int servo2_wrist_deg = 55;
+volatile int servo2_wrist_deg = 54;
 volatile int servo3_claw_deg = 80;
-volatile int servo4_slewing_deg = 730;
+volatile int servo4_slewing_deg = 720;
 volatile int servo5_outside_deg = 30;
 volatile int servo6_inside_deg = 150;
-volatile int servo7_cascade_rotate = 0;
-volatile int servo8_cascade_lengthen = 0;
+volatile int servo7_cascade_rotate = 590;
+volatile int servo8_cascade_lengthen = 90;
 
 volatile int roller_pwm = 0;
 
@@ -140,7 +140,7 @@ void arm_timer_callback(void) {							// constantly run the servo in timer callb
 	}
 
 	if(fork_homing){
-	    fork_joint.setPWM(-250);
+	    fork_joint.setPWM(600);
 	}
 	else{
 	    fork_joint.setTarget(fork_test);

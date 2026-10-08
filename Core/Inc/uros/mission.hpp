@@ -20,6 +20,7 @@ extern int prev_mission_type;
 extern int mission_status;
 extern int task_created;
 extern int mission_3_task;
+extern int getRoll_triggered;
 
 
 void mission_init(void);
@@ -30,6 +31,7 @@ void mission_200(void *pvParameters);
 void mission_201(void *pvParameters);
 void mission_202(void *pvParameters);
 void mission_203(void *pvParameters);
+void mission_204(void *pvParameters);
 void mission_3(void *pvParameters);
 void mission_301(void *pvParameters);
 void mission_302(void *pvParameters);
