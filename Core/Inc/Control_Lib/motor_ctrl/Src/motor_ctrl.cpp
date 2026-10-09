@@ -64,7 +64,8 @@ int32_t JointMotor_polulu::getCount()
 
 float JointMotor_polulu::getAngle()
 {
-    return getCount()*360.0f/(ARM_ENCODER_CPR * ARM_RATIO);
+//    return getCount()*360.0f/(ARM_ENCODER_CPR * ARM_RATIO);
+	return getCount()*0.02830188679;
 }
 
 void JointMotor_polulu::setPWM(int pwm)
@@ -105,7 +106,7 @@ void JointMotor_polulu::update()
 //    setPWM((int)pwm);
 //    _lastError = err;
     float err = _targetDeg - getAngle();
-    if(fabs(err) < 1.0f)
+    if(fabs(err) < 0.2f)
     {
         stop();
         return;

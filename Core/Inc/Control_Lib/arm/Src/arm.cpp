@@ -62,6 +62,9 @@ volatile bool intake_homing = false;
 volatile bool fork_homing = false;
 volatile bool sieve_homing = false;
 
+volatile bool sieve_flag = false;
+int test1009 = 0;
+
 void arm_init(void) {
     lower_joint.init();
     lower_joint.stop();
@@ -205,10 +208,18 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     }
 
     else if(GPIO_Pin == GPIO_PIN_2 && sieve_homing){
-        sieve_joint.stop();
-        sieve_joint.zero();
-        sieve_test = 0;
-        sieve_homing = false;
+//    else if(GPIO_Pin == GPIO_PIN_2){
+    	test1009++;
+//    	if(!sieve_flag){
+            sieve_joint.stop();
+            sieve_joint.zero();
+            sieve_test = 0;
+            sieve_homing = false;
+//            sieve_flag = true;
+//    	}
+//    	else if(sieve_flag){
+//            sieve_flag = false;
+//    	}
     }
 
     else if(GPIO_Pin == GPIO_PIN_1){
