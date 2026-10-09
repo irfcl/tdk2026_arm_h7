@@ -249,11 +249,11 @@ void readyForRoll() {
     roller_switch =0;
     servo2_wrist_deg = 52;
     servo3_claw_deg = 100;
-    servo4_slewing_deg = 730;
+    servo4_slewing_deg = 732;
     upper_test = 0;
     lower_test = 0;
     osDelay(750);
-    servo4_slewing_deg = 720;
+    servo4_slewing_deg = 722;
     osDelay(750);
 
     //往稻草卷伸
@@ -326,7 +326,7 @@ void mission_92(void *pvParameters)
     finishMission();
 }
 
-void mission_200(void *pvParameters)
+void mission_200(void *pvParameters) //篩子放低 掃
 {
 	mission_status = mission_type;
 	servo7_cascade_rotate = 590;
@@ -349,7 +349,7 @@ void mission_200(void *pvParameters)
 	finishMission();
 }
 
-void mission_201(void *pvParameters)
+void mission_201(void *pvParameters) //掃的收起來
 {
 	mission_status = mission_type;
 	servo7_cascade_rotate = 590;
@@ -359,21 +359,28 @@ void mission_201(void *pvParameters)
 	finishMission();
 }
 
-void mission_202(void *pvParameters)
+void mission_202(void *pvParameters) //夾住篩網
 {
 	mission_status = mission_type;
 	servo5_outside_deg = 180;
 	servo6_inside_deg = 0;
 	osDelay(2000);
 	sieve_test = -78;
+	osDelay(1000);
 	finishMission();
 }
 
-void mission_203(void *pvParameters)
+void mission_203(void *pvParameters) //翻篩網+搖晃
 {
 	mission_status = mission_type;
-	sieve_test = 10;
+	sieve_test = 0;
 	osDelay(5000);
+	for (int i =0; i<3; i++) {
+		sieve_test = -10;
+		osDelay(400);
+		sieve_test = -4;
+		osDelay(400);
+	}
 	sieve_test = -103;
 	osDelay(100);
 	sieve_test = -103;
@@ -484,11 +491,11 @@ void mission_301(void *pvParameters)
 	osDelay(500);
 	upper_joint.setSpeedRatio(0.4);
 	upper_test = -180;
-	osDelay(5000);
+	osDelay(3000);
 
 	//插入 0.4x speed
 	upper_test = -220;
-	osDelay(2500);
+	osDelay(3500);
 	//放手
 	servo3_claw_deg = 80;
 	osDelay(1000);
@@ -502,9 +509,15 @@ void mission_301(void *pvParameters)
 	upper_test = -80;
 	osDelay(1000);
 	servo4_slewing_deg = 720;
+	servo2_wrist_deg = 52;
 	osDelay(1000);
 	servo3_claw_deg = 80;
-	servo2_wrist_deg = 52;
+//	lower_homing = true;
+//	upper_homing = true;
+//	upper_test = 10;
+//	lower_test = 40;
+//	osDelay(1000);
+//	lower_test = 40;
 	upper_test = 0;
 	lower_test = 0;
 
@@ -547,9 +560,9 @@ void mission_302(void *pvParameters)
 	upper_test = -80;
 	osDelay(1000);
 	servo4_slewing_deg = 720;
+	servo2_wrist_deg = 52;
 	osDelay(1000);
 	servo3_claw_deg = 80;
-	servo2_wrist_deg = 52;
 	upper_test = 0;
 	lower_test = 0;
 
@@ -576,7 +589,7 @@ void mission_303(void *pvParameters)
 	osDelay(1000);
 	upper_joint.setSpeedRatio(0.4);
 	upper_test = -170;
-	osDelay(5000);
+	osDelay(3500);
 
 	//插入 0.4x speed
 	upper_test = -200;
@@ -594,9 +607,9 @@ void mission_303(void *pvParameters)
 	upper_test = -80;
 	osDelay(1000);
 	servo4_slewing_deg = 720;
+	servo2_wrist_deg = 52;
 	osDelay(1000);
 	servo3_claw_deg = 80;
-	servo2_wrist_deg = 52;
 	upper_test = 0;
 	lower_test = 0;
 
@@ -624,7 +637,7 @@ void mission_304(void *pvParameters)
 	osDelay(1000);
 	upper_joint.setSpeedRatio(0.4);
 	upper_test = -170;
-	osDelay(5000);
+	osDelay(3500);
 
 	//插入 0.4x speed
 	upper_test = -200;
@@ -642,10 +655,10 @@ void mission_304(void *pvParameters)
 	upper_test = -80;
 	osDelay(1000);
 	servo4_slewing_deg = 720;
+	servo2_wrist_deg = 52;
 	osDelay(1000);
 	servo7_cascade_rotate = 590;
 	servo3_claw_deg = 80;
-	servo2_wrist_deg = 52;
 	upper_test = 0;
 	lower_test = 0;
 
@@ -658,7 +671,7 @@ void mission_304(void *pvParameters)
 void mission_305(void *pvParameters)
 {
 	mission_status = mission_type;
-
+	fork_test = -300;
     // TODO
 
     finishMission();

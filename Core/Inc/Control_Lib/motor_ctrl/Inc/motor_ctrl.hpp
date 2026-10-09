@@ -106,7 +106,7 @@ private:
     GPIO_TypeDef *_dirPort;
     uint16_t _dirPin;
 
-    int32_t _absCount = 0;
+    volatile int32_t _absCount = 0;
     int32_t _prevCount = 0;
 //	int32_t _zeroCount=0;
 
@@ -121,59 +121,59 @@ private:
 
     float _speedRatio = 1.0f;
 };
-
-class JointMotor_vnh
-{
-public:
-
-    JointMotor_vnh(
-        TIM_HandleTypeDef* enc,
-        TIM_HandleTypeDef* pwm,
-        uint32_t channel,
-        GPIO_TypeDef* dirPortA,
-        uint16_t dirPinA,
-		GPIO_TypeDef* dirPortB,
-		uint16_t dirPinB
-    );
-
-    void init();
-    void update();
-    void setPWM(int pwm);
-    void stop();
-    void zero();
-    int32_t getCount();
-    float getAngle();
-    void setTarget(float deg);
-    void setSpeedRatio(float ratio);
-
-private:
-	TIM_HandleTypeDef *_enc;
-	TIM_HandleTypeDef *_pwm;
-
-	uint32_t _channel;
-
-	GPIO_TypeDef *_portA;
-	uint16_t _pinA;
-
-	GPIO_TypeDef *_portB;
-	uint16_t _pinB;
-
-    int32_t _absCount = 0;
-    int32_t _prevCount = 0;
-//	int32_t _zeroCount=0;
-
-    float _targetDeg;
-
-    float _kp = 10.0f;
-    float _ki = 0.0f;
-    float _kd = 1.0f;
-
-    float _integral = 0.0f;
-    float _lastError = 0.0f;
-
-    float _speedRatio = 1.0f;
-};
-
+//
+//class JointMotor_vnh
+//{
+//public:
+//
+//    JointMotor_vnh(
+//        TIM_HandleTypeDef* enc,
+//        TIM_HandleTypeDef* pwm,
+//        uint32_t channel,
+//        GPIO_TypeDef* dirPortA,
+//        uint16_t dirPinA,
+//		GPIO_TypeDef* dirPortB,
+//		uint16_t dirPinB
+//    );
+//
+//    void init();
+//    void update();
+//    void setPWM(int pwm);
+//    void stop();
+//    void zero();
+//    int32_t getCount();
+//    float getAngle();
+//    void setTarget(float deg);
+//    void setSpeedRatio(float ratio);
+//
+//private:
+//	TIM_HandleTypeDef *_enc;
+//	TIM_HandleTypeDef *_pwm;
+//
+//	uint32_t _channel;
+//
+//	GPIO_TypeDef *_portA;
+//	uint16_t _pinA;
+//
+//	GPIO_TypeDef *_portB;
+//	uint16_t _pinB;
+//
+//    int32_t _absCount = 0;
+//    int32_t _prevCount = 0;
+////	int32_t _zeroCount=0;
+//
+//    float _targetDeg;
+//
+//    float _kp = 10.0f;
+//    float _ki = 0.0f;
+//    float _kd = 1.0f;
+//
+//    float _integral = 0.0f;
+//    float _lastError = 0.0f;
+//
+//    float _speedRatio = 1.0f;
+//};
+//
 class RollerMotor
 {
 public:

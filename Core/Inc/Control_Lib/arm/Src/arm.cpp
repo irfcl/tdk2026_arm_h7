@@ -119,7 +119,7 @@ void arm_timer_callback(void) {							// constantly run the servo in timer callb
 //	intake_joint.update();
 
 	if(lower_homing){
-	    lower_joint.setPWM(-250);     // 朝Home方向慢慢跑
+	    lower_joint.setPWM(-500);     // 朝Home方向慢慢跑
 	}
 	else{
 	    lower_joint.setTarget(lower_test);
@@ -127,7 +127,7 @@ void arm_timer_callback(void) {							// constantly run the servo in timer callb
 	}
 
 	if(upper_homing){
-	    upper_joint.setPWM(250);
+	    upper_joint.setPWM(500);
 	}
 	else{
 	    upper_joint.setTarget(upper_test);
@@ -135,7 +135,7 @@ void arm_timer_callback(void) {							// constantly run the servo in timer callb
 	}
 
 	if(intake_homing){
-	    intake_joint.setPWM(-250);
+	    intake_joint.setPWM(-500);
 	}
 	else{
 	    intake_joint.setTarget(intake_test);
