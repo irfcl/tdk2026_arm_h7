@@ -160,6 +160,33 @@ void mission_ctrl(void)
     	}
     	break;
 
+    case 300:
+		arm_mode = ARM_MISSION;
+		ret = xTaskCreate(mission_300, "mission_300", 512, NULL, 2, NULL);
+		if(ret != pdPASS)
+		{
+			task_created = -1;
+		}
+		break;
+
+    case 311:
+		arm_mode = ARM_MISSION;
+		ret = xTaskCreate(mission_311, "mission_311", 512, NULL, 2, NULL);
+		if(ret != pdPASS)
+		{
+			task_created = -1;
+		}
+		break;
+
+    case 312:
+		arm_mode = ARM_MISSION;
+		ret = xTaskCreate(mission_312, "mission_312", 512, NULL, 2, NULL);
+		if(ret != pdPASS)
+		{
+			task_created = -1;
+		}
+		break;
+
     case 2:
     	arm_mode = ARM_MISSION;
     	ret = xTaskCreate(mission_2, "mission_2", 512, NULL, 2, NULL);
@@ -172,6 +199,15 @@ void mission_ctrl(void)
     case 200:
 		arm_mode = ARM_MISSION;
 		ret = xTaskCreate(mission_200, "mission_200", 512, NULL, 2, NULL);
+		if(ret != pdPASS)
+		{
+			task_created = -1;
+		}
+		break;
+
+    case 210:
+		arm_mode = ARM_MISSION;
+		ret = xTaskCreate(mission_210, "mission_210", 512, NULL, 2, NULL);
 		if(ret != pdPASS)
 		{
 			task_created = -1;
@@ -259,7 +295,7 @@ void readyForRoll() {
     //往稻草卷伸
     lower_test = -95;
     osDelay(500);
-    upper_test = -65;
+    upper_test = -60;
     osDelay(3000);
     servo3_claw_deg = 120;
 }
@@ -284,12 +320,14 @@ void getRoll() {
 	osDelay(1500);
 	servo2_wrist_deg = 105;
 	osDelay(1500);
+	servo7_cascade_rotate = 620;
 }
 
 static void finishMission()
 {
 	arm_mode = ARM_MANUAL;
     mission_status = -mission_type;
+    servo7_cascade_rotate = 590;
     mission_type = 0;
     task_created = 0;
     vTaskDelete(NULL);
@@ -326,24 +364,50 @@ void mission_92(void *pvParameters)
     finishMission();
 }
 
+const int sieve_horizontal = -108;
+const int sieve_lifted = -83;
+
 void mission_200(void *pvParameters) //篩子放低 掃
 {
 	mission_status = mission_type;
 	servo7_cascade_rotate = 590;
 	servo8_cascade_lengthen = 90;
 
-	sieve_test = -103;
+	sieve_test = sieve_horizontal;
 	osDelay(100);
-	sieve_test = -103;
+	sieve_test = sieve_horizontal;
 	osDelay(100);
-	sieve_test = -103;
+	sieve_test = sieve_horizontal;
 	osDelay(100);
 	servo7_cascade_rotate = 690;
 	servo5_outside_deg = 30;
 	servo6_inside_deg = 150;
 	osDelay(1000);
-	for (int i =0; i <8; i++) {
+	for (int i =0; i <9; i++) {
 		servo8_cascade_lengthen += 10;
+	}
+
+	finishMission();
+}
+
+void mission_210(void *pvParameters) //鏡像場地 篩子放低 掃
+{
+	mission_status = mission_type;
+	servo7_cascade_rotate = 590;
+	servo8_cascade_lengthen = 90;
+
+	sieve_test = sieve_horizontal;
+	osDelay(100);
+	sieve_test = sieve_horizontal;
+	osDelay(100);
+	sieve_test = sieve_horizontal;
+	osDelay(100);
+	servo7_cascade_rotate = 690;
+	servo5_outside_deg = 30;
+	servo6_inside_deg = 150;
+	osDelay(1000);
+	for (int i =0; i <9; i++) {
+		servo8_cascade_lengthen -= 10;
 	}
 
 	finishMission();
@@ -354,7 +418,7 @@ void mission_201(void *pvParameters) //掃的收起來
 	mission_status = mission_type;
 	servo7_cascade_rotate = 590;
 	osDelay(1000);
-	servo8_cascade_lengthen =80;
+	servo8_cascade_lengthen =90;
 	osDelay(1500);
 	finishMission();
 }
@@ -365,7 +429,7 @@ void mission_202(void *pvParameters) //夾住篩網
 	servo5_outside_deg = 180;
 	servo6_inside_deg = 0;
 	osDelay(2000);
-	sieve_test = -78;
+	sieve_test = sieve_lifted;
 	osDelay(1000);
 	finishMission();
 }
@@ -374,21 +438,22 @@ void mission_203(void *pvParameters) //翻篩網+搖晃
 {
 	mission_status = mission_type;
 	sieve_test = 0;
-	osDelay(5000);
-	for (int i =0; i<3; i++) {
-		sieve_test = -10;
-		osDelay(400);
-		sieve_test = -4;
-		osDelay(400);
-	}
-	sieve_test = -103;
+	osDelay(2500);
+	////搖晃
+	//for (int i =0; i<2; i++) {
+	//	sieve_test = -54;
+	//	osDelay(2400);
+	//	sieve_test = -4;
+	//	osDelay(1200);
+	//}
+	sieve_test = sieve_horizontal;
 	osDelay(100);
-	sieve_test = -103;
+	sieve_test = sieve_horizontal;
 	osDelay(100);
-	sieve_test = -103;
+	sieve_test = sieve_horizontal;
 	osDelay(100);
 	osDelay(3500);
-	sieve_test = -78;
+	sieve_test = sieve_lifted;
 	osDelay(500);
 	finishMission();
 }
@@ -396,7 +461,7 @@ void mission_203(void *pvParameters) //翻篩網+搖晃
 void mission_204(void *pvParameters)
 {
 	mission_status = mission_type;
-	sieve_test = -103;
+	sieve_test = sieve_horizontal;
 	osDelay(1000);
 	servo5_outside_deg = 30;
 	servo6_inside_deg = 150;
@@ -512,17 +577,10 @@ void mission_301(void *pvParameters)
 	servo2_wrist_deg = 52;
 	osDelay(1000);
 	servo3_claw_deg = 80;
-//	lower_homing = true;
-//	upper_homing = true;
-//	upper_test = 10;
-//	lower_test = 40;
-//	osDelay(1000);
-//	lower_test = 40;
 	upper_test = 0;
 	lower_test = 0;
 
 	osDelay(1000);
-
 
 	finishMission();
 }
@@ -538,11 +596,12 @@ void mission_302(void *pvParameters)
 	}
 	getRoll();
 
-	servo4_slewing_deg = 705;
+	servo4_slewing_deg = 709;
 	osDelay(500);
+	lower_test = -25;
 	upper_joint.setSpeedRatio(0.4);
-	upper_test = -180;
-	osDelay(5000);
+	upper_test = -175;
+	osDelay(3000);
 
 	//插入 0.4x speed
 	upper_test = -220;
@@ -583,12 +642,12 @@ void mission_303(void *pvParameters)
 	}
 	getRoll();
 
-	servo4_slewing_deg = 680;
+	servo4_slewing_deg = 690;
 	osDelay(500);
-	lower_test = -10;
+	lower_test = 5;
 	osDelay(1000);
 	upper_joint.setSpeedRatio(0.4);
-	upper_test = -170;
+	upper_test = -155;
 	osDelay(3500);
 
 	//插入 0.4x speed
@@ -622,7 +681,6 @@ void mission_303(void *pvParameters)
 void mission_304(void *pvParameters)
 {
 	mission_status = mission_type;
-	servo7_cascade_rotate = 700;
 	readyForRoll();
 
 	roller_pwm = 750;
@@ -631,12 +689,13 @@ void mission_304(void *pvParameters)
 	}
 	getRoll();
 
+	servo7_cascade_rotate = 680;
 	servo4_slewing_deg = 760;
 	osDelay(500);
-	lower_test = -10;
+	lower_test = 15;
 	osDelay(1000);
 	upper_joint.setSpeedRatio(0.4);
-	upper_test = -170;
+	upper_test = -150;
 	osDelay(3500);
 
 	//插入 0.4x speed
@@ -668,10 +727,18 @@ void mission_304(void *pvParameters)
 	finishMission();
 }
 
+void mission_300(void *pvParameters)
+{
+	mission_status = mission_type;
+
+	fork_test = -300;
+
+    finishMission();
+}
+
 void mission_305(void *pvParameters)
 {
 	mission_status = mission_type;
-	fork_test = -300;
     // TODO
 
     finishMission();
@@ -718,6 +785,24 @@ void mission_310(void *pvParameters)
 	mission_status = mission_type;
 
     // TODO
+
+    finishMission();
+}
+
+void mission_311(void *pvParameters)
+{
+	mission_status = mission_type;
+
+	fork_test = 0;
+
+    finishMission();
+}
+
+void mission_312(void *pvParameters)
+{
+	mission_status = mission_type;
+
+	fork_test = -300;
 
     finishMission();
 }
