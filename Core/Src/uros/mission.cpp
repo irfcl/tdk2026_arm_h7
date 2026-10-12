@@ -276,61 +276,157 @@ void mission_ctrl(void)
     	    task_created = -1;
     	}
     	break;
+
+    case 991:
+    	arm_mode = ARM_MISSION;
+    	ret = xTaskCreate(mission_991, "mission_991", 512, NULL, 2, NULL);
+    	if(ret != pdPASS)
+    	{
+    	    task_created = -1;
+    	}
+    	break;
+
+    case 992:
+    	arm_mode = ARM_MISSION;
+    	ret = xTaskCreate(mission_992, "mission_992", 512, NULL, 2, NULL);
+    	if(ret != pdPASS)
+    	{
+    	    task_created = -1;
+    	}
+    	break;
+
+    case 967:
+		arm_mode = ARM_MISSION;
+		ret = xTaskCreate(mission_967, "mission_967", 512, NULL, 2, NULL);
+		if(ret != pdPASS)
+		{
+			task_created = -1;
+		}
+		break;
+
+    case 976:
+		arm_mode = ARM_MISSION;
+		ret = xTaskCreate(mission_976, "mission_976", 512, NULL, 2, NULL);
+		if(ret != pdPASS)
+		{
+			task_created = -1;
+		}
+		break;
     }
 }
 
 void readyForRoll() {
-    //初始
+	mission_status = mission_type * 10 + 1;
+	//初始
 	upper_joint.setSpeedRatio(1);
     roller_switch =0;
     servo2_wrist_deg = 52;
     servo3_claw_deg = 100;
-    servo4_slewing_deg = 732;
+    servo4_slewing_deg = 734;
     upper_test = 0;
     lower_test = 0;
-    osDelay(750);
-    servo4_slewing_deg = 722;
-    osDelay(750);
+    roller_pwm = -500;
+    osDelay(400);
+    servo4_slewing_deg = 724;
+    osDelay(200);
+    roller_pwm = 0;
+    osDelay(600);
 
     //往稻草卷伸
     lower_test = -95;
     osDelay(500);
     upper_test = -60;
-    osDelay(3000);
+    osDelay(2100);
     servo3_claw_deg = 120;
 }
 
 void getRoll() {
-	mission_status = mission_type * 10 + 1;
     upper_test = -75;
     lower_test = -105;
-    osDelay(1000);
+    osDelay(800);
     //roller_pwm = 0;
     //夾+抬
     servo3_claw_deg = 60;
-	osDelay(1000);
+	osDelay(500);
     lower_test = -30;
-	osDelay(1000);
+	osDelay(1200);
 	//upper_test = 0;
 	roller_pwm = 0;
-	osDelay(2000);
+	osDelay(1000);
 	//橫放到對面叉子上
 	//移動
 	upper_test = -130;
-	osDelay(1500);
-	servo2_wrist_deg = 105;
-	osDelay(1500);
 	servo7_cascade_rotate = 620;
+	osDelay(1000);
+	servo2_wrist_deg = 105;
+	osDelay(1000);
 }
 
 static void finishMission()
 {
 	arm_mode = ARM_MANUAL;
     mission_status = -mission_type;
-    servo7_cascade_rotate = 590;
     mission_type = 0;
     task_created = 0;
     vTaskDelete(NULL);
+}
+
+void mission_967(void *pvParameters) {
+	mission_status = mission_type;
+	reel_pwm =1;
+	osDelay(1300);
+	reel_pwm =0;
+
+	finishMission();
+}
+
+void mission_976(void *pvParameters) {
+	mission_status = mission_type;
+	reel_pwm =-1;
+	osDelay(2200);
+	reel_pwm =0;
+
+	finishMission();
+}
+
+void mission_991(void *pvParameters) {
+	mission_status = mission_type;
+	lower_test +=40;
+	upper_test -=20;
+	sieve_test -=10;
+	fork_test -= 50;
+	arm_homing();
+	sieve_mission_homing();
+	fork_mission_homing();
+	while(lower_homing||upper_homing||sieve_homing||fork_homing){
+		osDelay(20);
+	}
+	sieve_test = -5;
+	finishMission();
+}
+
+void mission_992(void *pvParameters) {
+	mission_status = mission_type;
+	lower_switch =0;
+	upper_test -=20;
+	sieve_test -=10;
+	fork_test -= 50;
+	arm_homing();
+	sieve_mission_homing();
+	fork_mission_homing();
+	while(lower_homing||upper_homing||sieve_homing||fork_homing){
+		osDelay(20);
+	}
+	lower_test +=40;
+	upper_test = -20;
+	osDelay(1500);
+	lower_switch = 67;
+	arm_homing();
+	while(lower_homing||upper_homing||sieve_homing||fork_homing) {
+		osDelay(20);
+	}
+	sieve_test = -5;
+	finishMission();
 }
 
 //homing
@@ -351,6 +447,7 @@ void mission_91(void *pvParameters)
     while(sieve_homing){
         osDelay(20);
     }
+    sieve_test = -5;
     finishMission();
 }
 
@@ -468,85 +565,62 @@ void mission_204(void *pvParameters)
 	finishMission();
 }
 
-//void mission_3(void *pvParameters)
+//void mission_301(void *pvParameters)
 //{
-//	mission_type = mission_3_task;
-//    mission_status = 0;
+//	mission_status = mission_type;
+//	readyForRoll();
 //
-//    BaseType_t ret = pdFAIL;
+//	roller_pwm = 750;
+//	while (roller_switch <3) {
+//		osDelay(10);
+//	}
+//	getRoll();
 //
-//    switch (mission_3_task)
-//    {
-//    case 301:
-//        ret = xTaskCreate(mission_301, "mission_301", 512, NULL, 2, NULL);
-//        break;
+//	servo4_slewing_deg = 740;
+//	osDelay(500);
+//	upper_joint.setSpeedRatio(0.4);
+//	upper_test = -180;
+//	osDelay(3000);
 //
-//    case 302:
-//        ret = xTaskCreate(mission_302, "mission_302", 512, NULL, 2, NULL);
-//        break;
+//	//插入 0.4x speed
+//	upper_test = -220;
+//	osDelay(3500);
+//	//放手
+//	servo3_claw_deg = 80;
+//	osDelay(1000);
+//	for (int i=0; i<20; i++){
+//		servo3_claw_deg++;
+//		osDelay(100);
+//	}
 //
-//    case 303:
-//        ret = xTaskCreate(mission_303, "mission_303", 512, NULL, 2, NULL);
-//        break;
+//	//抽離+回正
+//	upper_joint.setSpeedRatio(1);
+//	upper_test = -80;
+//	osDelay(1000);
+//	servo4_slewing_deg = 720;
+//	servo2_wrist_deg = 52;
+//	osDelay(1000);
+//	servo3_claw_deg = 80;
+//	upper_test = 0;
+//	lower_test = 0;
 //
-//    case 304:
-//        ret = xTaskCreate(mission_304, "mission_304", 512, NULL, 2, NULL);
-//        break;
+//	osDelay(1000);
+//	servo7_cascade_rotate = 590;
 //
-//    case 305:
-//        ret = xTaskCreate(mission_305, "mission_305", 512, NULL, 2, NULL);
-//        break;
-//
-//    case 306:
-//        ret = xTaskCreate(mission_306, "mission_306", 512, NULL, 2, NULL);
-//        break;
-//
-//    case 307:
-//        ret = xTaskCreate(mission_307, "mission_307", 512, NULL, 2, NULL);
-//        break;
-//
-//    case 308:
-//        ret = xTaskCreate(mission_308, "mission_308", 512, NULL, 2, NULL);
-//        break;
-//
-//    case 309:
-//        ret = xTaskCreate(mission_309, "mission_309", 512, NULL, 2, NULL);
-//        break;
-//
-//    case 310:
-//        ret = xTaskCreate(mission_310, "mission_310", 512, NULL, 2, NULL);
-//        break;
-//
-//    default:
-//        mission_3_task = 301;
-//        ret = xTaskCreate(mission_301, "mission_301", 512, NULL, 2, NULL);
-//        break;
-//    }
-//
-//    if(ret == pdPASS){
-//        if(mission_3_task < 310){
-//        	mission_3_task++;
-//        }
-//        else{
-//        	mission_3_task = 301;
-//        }
-//    }
-//
-//    else{
-//        task_created = -1;
-//        vTaskDelete(NULL);
-//        return;
-//    }
-//
-//    vTaskDelete(NULL);
+//	finishMission();
 //}
 
-void mission_301(void *pvParameters)
+void mission_301(void *pvParameters) //這個是optimized版
 {
 	mission_status = mission_type;
+	roller_pwm = 1000;
+	roller_switch =0;
+	while (roller_switch <3) {
+		osDelay(10);
+	}
 	readyForRoll();
 
-	roller_pwm = 750;
+	roller_pwm = 1000;
 	while (roller_switch <3) {
 		osDelay(10);
 	}
@@ -554,18 +628,18 @@ void mission_301(void *pvParameters)
 
 	servo4_slewing_deg = 740;
 	osDelay(500);
-	upper_joint.setSpeedRatio(0.4);
+	upper_joint.setSpeedRatio(0.8);
 	upper_test = -180;
-	osDelay(3000);
+	osDelay(1500);
 
-	//插入 0.4x speed
+	//插入 0.8x speed
 	upper_test = -220;
-	osDelay(3500);
+	osDelay(1500);
 	//放手
 	servo3_claw_deg = 80;
-	osDelay(1000);
-	for (int i=0; i<20; i++){
-		servo3_claw_deg++;
+	osDelay(500);
+	for (int i=0; i<4; i++){
+		servo3_claw_deg+=5;
 		osDelay(100);
 	}
 
@@ -581,16 +655,24 @@ void mission_301(void *pvParameters)
 	lower_test = 0;
 
 	osDelay(1000);
+	servo7_cascade_rotate = 590;
 
 	finishMission();
 }
 
+
+
 void mission_302(void *pvParameters)
 {
 	mission_status = mission_type;
+	roller_pwm = 1000;
+	roller_switch =0;
+	while (roller_switch <3) {
+		osDelay(10);
+	}
 	readyForRoll();
 
-	roller_pwm = 750;
+	roller_pwm = 1000;
 	while (roller_switch <3) {
 		osDelay(10);
 	}
@@ -599,18 +681,18 @@ void mission_302(void *pvParameters)
 	servo4_slewing_deg = 709;
 	osDelay(500);
 	lower_test = -25;
-	upper_joint.setSpeedRatio(0.4);
+	upper_joint.setSpeedRatio(0.8);
 	upper_test = -175;
-	osDelay(3000);
+	osDelay(1500);
 
-	//插入 0.4x speed
+	//插入 0.8x speed
 	upper_test = -220;
-	osDelay(2500);
+	osDelay(1500);
 	//放手
 	servo3_claw_deg = 80;
-	osDelay(1000);
-	for (int i=0; i<20; i++){
-		servo3_claw_deg++;
+	osDelay(500);
+	for (int i=0; i<4; i++){
+		servo3_claw_deg+=5;
 		osDelay(100);
 	}
 
@@ -626,7 +708,7 @@ void mission_302(void *pvParameters)
 	lower_test = 0;
 
 	osDelay(1000);
-
+	servo7_cascade_rotate = 590;
 
 	finishMission();
 }
@@ -634,9 +716,14 @@ void mission_302(void *pvParameters)
 void mission_303(void *pvParameters)
 {
 	mission_status = mission_type;
+	roller_pwm = 1000;
+	roller_switch =0;
+	while (roller_switch <3) {
+		osDelay(10);
+	}
 	readyForRoll();
 
-	roller_pwm = 750;
+	roller_pwm = 1000;
 	while (roller_switch <3) {
 		osDelay(10);
 	}
@@ -646,7 +733,7 @@ void mission_303(void *pvParameters)
 	osDelay(500);
 	lower_test = 5;
 	osDelay(1000);
-	upper_joint.setSpeedRatio(0.4);
+	upper_joint.setSpeedRatio(0.8);
 	upper_test = -155;
 	osDelay(3500);
 
@@ -656,8 +743,8 @@ void mission_303(void *pvParameters)
 	//放手
 	servo3_claw_deg = 80;
 	osDelay(1000);
-	for (int i=0; i<10; i++){
-		servo3_claw_deg+=2;
+	for (int i=0; i<4; i++){
+		servo3_claw_deg+=5;
 		osDelay(100);
 	}
 
@@ -673,7 +760,7 @@ void mission_303(void *pvParameters)
 	lower_test = 0;
 
 	osDelay(1000);
-
+	servo7_cascade_rotate = 590;
 
 	finishMission();
 }
@@ -681,9 +768,14 @@ void mission_303(void *pvParameters)
 void mission_304(void *pvParameters)
 {
 	mission_status = mission_type;
+	roller_pwm = 1000;
+	roller_switch =0;
+	while (roller_switch <3) {
+		osDelay(10);
+	}
 	readyForRoll();
 
-	roller_pwm = 750;
+	roller_pwm = 1000;
 	while (roller_switch <3) {
 		osDelay(10);
 	}
@@ -692,20 +784,20 @@ void mission_304(void *pvParameters)
 	servo7_cascade_rotate = 680;
 	servo4_slewing_deg = 760;
 	osDelay(500);
-	lower_test = 15;
+	lower_test = 25;
 	osDelay(1000);
-	upper_joint.setSpeedRatio(0.4);
-	upper_test = -150;
-	osDelay(3500);
+	upper_joint.setSpeedRatio(0.8);
+	upper_test = -140;
+	osDelay(1800);
 
 	//插入 0.4x speed
 	upper_test = -200;
-	osDelay(2500);
+	osDelay(1800);
 	//放手
 	servo3_claw_deg = 80;
 	osDelay(1000);
-	for (int i=0; i<10; i++){
-		servo3_claw_deg+=2;
+	for (int i=0; i<4; i++){
+		servo3_claw_deg+=5;
 		osDelay(100);
 	}
 
@@ -713,7 +805,7 @@ void mission_304(void *pvParameters)
 	upper_joint.setSpeedRatio(1);
 	upper_test = -80;
 	osDelay(1000);
-	servo4_slewing_deg = 720;
+	servo4_slewing_deg = 722;
 	servo2_wrist_deg = 52;
 	osDelay(1000);
 	servo7_cascade_rotate = 590;
@@ -722,7 +814,7 @@ void mission_304(void *pvParameters)
 	lower_test = 0;
 
 	osDelay(1000);
-
+	servo7_cascade_rotate = 590;
 
 	finishMission();
 }
@@ -736,10 +828,88 @@ void mission_300(void *pvParameters)
     finishMission();
 }
 
+void mission_307(void *pvParameters)
+{
+	mission_status = mission_type;
+	roller_pwm = 1000;
+	roller_switch =0;
+	while (roller_switch <3) {
+		osDelay(10);
+	}
+	readyForRoll();
+
+	roller_pwm = 1000;
+	while (roller_switch <3) {
+		osDelay(10);
+	}
+	getRoll();
+
+	lower_test = 10;
+	osDelay(400);
+	upper_test = -205;
+	osDelay(3500);
+	for (int i =0; i<8; i++) {
+		servo3_claw_deg += 5;
+		osDelay(200);
+	}
+	osDelay(400);
+	upper_test = -80;
+	osDelay(1000);
+	servo4_slewing_deg = 720;
+	servo2_wrist_deg = 52;
+	osDelay(1000);
+	servo7_cascade_rotate = 590;
+	servo3_claw_deg = 80;
+	upper_test = 0;
+	lower_test = 0;
+
+	osDelay(1000);
+	servo7_cascade_rotate = 590;
+
+    finishMission();
+}
+
 void mission_305(void *pvParameters)
 {
 	mission_status = mission_type;
-    // TODO
+	roller_pwm = 1000;
+	roller_switch =0;
+	while (roller_switch <3) {
+		osDelay(10);
+	}
+	readyForRoll();
+
+	roller_pwm = 1000;
+	while (roller_switch <3) {
+		osDelay(10);
+	}
+	getRoll();
+
+	servo4_slewing_deg = 700;
+	servo2_wrist_deg = 115;
+
+	lower_test = 10;
+	upper_test = -192;
+	osDelay(3500);
+	lower_test = 25;
+	osDelay(800);
+	for (int i =0; i<9; i++) {
+		servo3_claw_deg +=5;
+		osDelay(200);
+	}
+	osDelay(400);
+	upper_test = -80;
+	osDelay(1000);
+	servo4_slewing_deg = 720;
+	servo2_wrist_deg = 52;
+	osDelay(1000);
+	servo7_cascade_rotate = 590;
+	servo3_claw_deg = 80;
+	upper_test = 0;
+	lower_test = 0;
+
+	osDelay(1000);
+	servo7_cascade_rotate = 590;
 
     finishMission();
 }
@@ -747,17 +917,44 @@ void mission_305(void *pvParameters)
 void mission_306(void *pvParameters)
 {
 	mission_status = mission_type;
+	roller_pwm = 1000;
+	roller_switch =0;
+	while (roller_switch <3) {
+		osDelay(10);
+	}
+	readyForRoll();
 
-    // TODO
+	roller_pwm = 1000;
+	while (roller_switch <3) {
+		osDelay(10);
+	}
+	getRoll();
 
-    finishMission();
-}
+	servo4_slewing_deg = 750;
+	servo2_wrist_deg = 95;
 
-void mission_307(void *pvParameters)
-{
-	mission_status = mission_type;
+	lower_test = 10;
+	upper_test = -195;
+	osDelay(3500);
+	lower_test = 25;
+	osDelay(800);
+	for (int i =0; i<9; i++) {
+		servo3_claw_deg +=5;
+		osDelay(200);
+	}
+	osDelay(400);
+	upper_test = -80;
+	osDelay(1000);
+	servo4_slewing_deg = 720;
+	servo2_wrist_deg = 52;
+	osDelay(1000);
+	servo7_cascade_rotate = 590;
+	servo3_claw_deg = 80;
+	upper_test = 0;
+	lower_test = 0;
 
-    // TODO
+	osDelay(1000);
+	servo7_cascade_rotate = 590;
 
     finishMission();
 }

@@ -49,6 +49,10 @@ void mission_312(void *pvParameters);
 void mission_99(void *pvParameters);
 void mission_91(void *pvParameters);
 void mission_92(void *pvParameters);
+void mission_991(void *pvParameters);
+void mission_992(void *pvParameters);
+void mission_967(void *pvParameters);
+void mission_976(void *pvParameters);
 
 
 

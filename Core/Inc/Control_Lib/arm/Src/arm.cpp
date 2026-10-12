@@ -1,5 +1,6 @@
 #include "arm.h"
 #include "math.h"
+#include "mission.hpp"
 #include "UART_servo.h"
 #include "stm32h7xx_hal.h"
 #include "motor_monitor.hpp"
@@ -63,9 +64,6 @@ volatile bool intake_homing = false;
 volatile bool fork_homing = false;
 volatile bool sieve_homing = false;
 
-volatile bool sieve_flag = false;
-int test1009 = 0;
-
 void arm_init(void) {
     lower_joint.init();
     lower_joint.stop();
@@ -121,7 +119,12 @@ void arm_timer_callback(void) {							// constantly run the servo in timer callb
 //	intake_joint.update();
 
 	if(lower_homing){
+		if (mission_status = 992 && lower_switch != 67) {
+			lower_joint.setPWM(500);
+		}
+		else {
 	    lower_joint.setPWM(-500);     // 朝Home方向慢慢跑
+		}
 	}
 	else{
 	    lower_joint.setTarget(lower_test);
@@ -137,7 +140,7 @@ void arm_timer_callback(void) {							// constantly run the servo in timer callb
 	}
 
 	if(intake_homing){
-	    intake_joint.setPWM(-500);
+	    intake_joint.setPWM(-250);
 	}
 	else{
 	    intake_joint.setTarget(intake_test);
@@ -183,25 +186,26 @@ void arm_timer_callback(void) {							// constantly run the servo in timer callb
         HAL_GPIO_WritePin(GPIOD, GPIO_PIN_2, GPIO_PIN_RESET);
         HAL_GPIO_WritePin(GPIOD, GPIO_PIN_3, GPIO_PIN_RESET);
     }
-
     if(reel_pwm>0){
-    	HAL_GPIO_WritePin(GPIOD, GPIO_PIN_4, GPIO_PIN_SET);
-    	HAL_GPIO_WritePin(GPIOD, GPIO_PIN_5, GPIO_PIN_RESET);
-    }
-    else if(reel_pwm<0){
-        HAL_GPIO_WritePin(GPIOD, GPIO_PIN_4, GPIO_PIN_RESET);
-        HAL_GPIO_WritePin(GPIOD, GPIO_PIN_5, GPIO_PIN_SET);
-    }
-    else{
-        HAL_GPIO_WritePin(GPIOD, GPIO_PIN_4, GPIO_PIN_RESET);
-        HAL_GPIO_WritePin(GPIOD, GPIO_PIN_5, GPIO_PIN_RESET);
-    }
+		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_4, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_5, GPIO_PIN_RESET);
+	}
+	else if(reel_pwm<0){
+		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_4, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_5, GPIO_PIN_SET);
+	}
+	else{
+		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_4, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_5, GPIO_PIN_RESET);
+	}
 }
 
 volatile int roller_switch = 0;
+volatile int lower_switch = 0;
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
     if(GPIO_Pin == GPIO_PIN_13 && lower_homing){
+    	lower_switch++;
         lower_joint.stop();
         lower_joint.zero();
         lower_test = 0;
@@ -223,18 +227,10 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     }
 
     else if(GPIO_Pin == GPIO_PIN_2 && sieve_homing){
-//    else if(GPIO_Pin == GPIO_PIN_2){
-    	test1009++;
-//    	if(!sieve_flag){
-            sieve_joint.stop();
-            sieve_joint.zero();
-            sieve_test = 0;
-            sieve_homing = false;
-//            sieve_flag = true;
-//    	}
-//    	else if(sieve_flag){
-//            sieve_flag = false;
-//    	}
+        sieve_joint.stop();
+        sieve_joint.zero();
+        sieve_test = 0;
+        sieve_homing = false;
     }
 
     else if(GPIO_Pin == GPIO_PIN_1){

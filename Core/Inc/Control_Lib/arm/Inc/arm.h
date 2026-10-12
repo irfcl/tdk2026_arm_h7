@@ -66,6 +66,7 @@ extern volatile int servo8_cascade_lengthen;
 extern volatile int roller_pwm;
 extern volatile int reel_pwm;
 extern volatile int roller_switch;
+extern volatile int lower_switch;
 
 #ifdef __cplusplus
 }
