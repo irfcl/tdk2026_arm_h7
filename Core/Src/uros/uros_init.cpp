@@ -149,10 +149,10 @@ void uros_create_entities(void) {
 
   //0724
   test_arm_msg.data.data =
-      (int16_t *)malloc(sizeof(int16_t) * 14);
+      (int16_t *)malloc(sizeof(int16_t) * 15);
 
-  test_arm_msg.data.size = 14;
-  test_arm_msg.data.capacity = 14;
+  test_arm_msg.data.size = 15;
+  test_arm_msg.data.capacity = 15;
   //
 
   init_options = rcl_get_zero_initialized_init_options();
@@ -319,7 +319,7 @@ void cmd_test_arm_sub_cb(const void *msgin)
     if(msg->data.size < 2)
         return;
 
-    if (msg->data.size >= 14) {
+    if (msg->data.size >= 15) {
         lower_test           		= msg->data.data[0];
         upper_test           		= msg->data.data[1];
         intake_test          		= msg->data.data[2];
@@ -334,6 +334,7 @@ void cmd_test_arm_sub_cb(const void *msgin)
         servo6_inside_deg    		= msg->data.data[11];
         servo7_cascade_rotate		= msg->data.data[12];
 		servo8_cascade_lengthen		= msg->data.data[13];
+		reel_pwm					= msg->data.data[14];
     }
 
     else if (msg->data.size == 2) {
@@ -355,6 +356,7 @@ void cmd_test_arm_sub_cb(const void *msgin)
             case 11: servo6_inside_deg   	  = value; break;
             case 12: servo7_cascade_rotate	  = value; break;
             case 13: servo8_cascade_lengthen  = value; break;
+            case 14: reel_pwm				  = value; break;
 
             default: break;
         }

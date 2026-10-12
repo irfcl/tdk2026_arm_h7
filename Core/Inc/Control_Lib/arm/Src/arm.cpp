@@ -55,6 +55,7 @@ volatile int servo7_cascade_rotate = 590;
 volatile int servo8_cascade_lengthen = 90;
 
 volatile int roller_pwm = 0;
+volatile int reel_pwm = 0;
 
 volatile bool lower_homing = false;
 volatile bool upper_homing = false;
@@ -90,6 +91,7 @@ void arm_init(void) {
 
     HAL_GPIO_WritePin(GPIOE, GPIO_PIN_2, GPIO_PIN_SET);
     HAL_GPIO_WritePin(GPIOD, GPIO_PIN_2 | GPIO_PIN_3, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOD, GPIO_PIN_4 | GPIO_PIN_5, GPIO_PIN_RESET);
 }
 
 
@@ -180,6 +182,19 @@ void arm_timer_callback(void) {							// constantly run the servo in timer callb
     else{
         HAL_GPIO_WritePin(GPIOD, GPIO_PIN_2, GPIO_PIN_RESET);
         HAL_GPIO_WritePin(GPIOD, GPIO_PIN_3, GPIO_PIN_RESET);
+    }
+
+    if(reel_pwm>0){
+    	HAL_GPIO_WritePin(GPIOD, GPIO_PIN_4, GPIO_PIN_SET);
+    	HAL_GPIO_WritePin(GPIOD, GPIO_PIN_5, GPIO_PIN_RESET);
+    }
+    else if(reel_pwm<0){
+        HAL_GPIO_WritePin(GPIOD, GPIO_PIN_4, GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(GPIOD, GPIO_PIN_5, GPIO_PIN_SET);
+    }
+    else{
+        HAL_GPIO_WritePin(GPIOD, GPIO_PIN_4, GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(GPIOD, GPIO_PIN_5, GPIO_PIN_RESET);
     }
 }
 
