@@ -119,7 +119,7 @@ void arm_timer_callback(void) {							// constantly run the servo in timer callb
 //	intake_joint.update();
 
 	if(lower_homing){
-		if (mission_status = 992 && lower_switch != 67) {
+		if (mission_status == 992 && lower_switch != 67) {
 			lower_joint.setPWM(500);
 		}
 		else {
@@ -205,7 +205,6 @@ volatile int lower_switch = 0;
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
     if(GPIO_Pin == GPIO_PIN_13 && lower_homing){
-    	lower_switch++;
         lower_joint.stop();
         lower_joint.zero();
         lower_test = 0;
