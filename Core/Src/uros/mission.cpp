@@ -402,7 +402,7 @@ void mission_991(void *pvParameters) {
 	mission_status = mission_type;
 	lower_test +=40;
 	upper_test -=20;
-	sieve_test -=10;
+	sieve_test -=15;
 	fork_test -= 50;
 	osDelay(2000);
 
@@ -420,7 +420,7 @@ void mission_992(void *pvParameters) {
 	mission_status = mission_type;
 	lower_switch =0;
 	upper_test -=20;
-	sieve_test -=10;
+	sieve_test -=15;
 	fork_test -= 50;
 	osDelay(2000);
 	arm_homing();
@@ -489,7 +489,7 @@ void mission_200(void *pvParameters) //篩子放低 掃
 	osDelay(100);
 	sieve_test = sieve_horizontal;
 	osDelay(100);
-	servo7_cascade_rotate = 690;
+	servo7_cascade_rotate = 680;
 	servo5_outside_deg = 30;
 	servo6_inside_deg = 150;
 	osDelay(1000);
@@ -512,7 +512,7 @@ void mission_210(void *pvParameters) //鏡像場地 篩子放低 掃
 	osDelay(100);
 	sieve_test = sieve_horizontal;
 	osDelay(100);
-	servo7_cascade_rotate = 690;
+	servo7_cascade_rotate = 680;
 	servo5_outside_deg = 30;
 	servo6_inside_deg = 150;
 	osDelay(1000);
@@ -1069,6 +1069,7 @@ void mission_311(void *pvParameters)
 	mission_status = mission_type;
 
 	fork_test = 0;
+	osDelay(5000);
 
     finishMission();
 }
@@ -1078,6 +1079,7 @@ void mission_312(void *pvParameters)
 	mission_status = mission_type;
 
 	fork_test = -300;
+	osDelay(4500);
 
     finishMission();
 }
